@@ -1,5 +1,5 @@
-public class Main {
-    public static void main(String[] args) {
+public class Demo01 {
+    public static void Demo01(String[] args) {
         System.out.println("=== Student Onboarding ===");
         FakeDb db = new FakeDb();
         OnboardingService svc = new OnboardingService(db);
