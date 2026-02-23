@@ -1,7 +1,7 @@
 import java.util.*;
 
 public class Demo02 {
-    public static void Demo02(String[] args) {
+    public static void main(String[] args) {
         System.out.println("=== Cafeteria Billing ===");
 
         CafeteriaSystem sys = new CafeteriaSystem(new FileStore());
