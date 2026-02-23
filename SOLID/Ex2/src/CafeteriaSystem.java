@@ -2,41 +2,39 @@ import java.util.*;
 
 public class CafeteriaSystem {
     private final Map<String, MenuItem> menu = new LinkedHashMap<>();
-    private final FileStore store = new FileStore();
+    private final Storage store ;
     private int invoiceSeq = 1000;
+
+    public CafeteriaSystem(Storage store) { this.store = store; }
 
     public void addToMenu(MenuItem i) { menu.put(i.id, i); }
 
     // Intentionally SRP-violating: menu mgmt + tax + discount + format + persistence.
     public void checkout(String customerType, List<OrderLine> lines) {
+        // ConsolePrinter printer = new ConsolePrinter();
         String invId = "INV-" + (++invoiceSeq);
-        StringBuilder out = new StringBuilder();
-        out.append("Invoice# ").append(invId).append("\n");
+        BillCalculator calc = new BillCalculator();
+        // printer.invoiceGenerator(invId);
 
-        double subtotal = 0.0;
-        for (OrderLine l : lines) {
-            MenuItem item = menu.get(l.itemId);
-            double lineTotal = item.price * l.qty;
-            subtotal += lineTotal;
-            out.append(String.format("- %s x%d = %.2f\n", item.name, l.qty, lineTotal));
-        }
+        double subtotal = calc.calculateSubtotal(lines, menu);
 
         double taxPct = TaxRules.taxPercent(customerType);
-        double tax = subtotal * (taxPct / 100.0);
+        double tax = calc.calculateTax(subtotal, taxPct);
+        
+        double discount = calc.calculateDiscount(subtotal, customerType, lines.size());
 
-        double discount = DiscountRules.discountAmount(customerType, subtotal, lines.size());
 
         double total = subtotal + tax - discount;
 
-        out.append(String.format("Subtotal: %.2f\n", subtotal));
-        out.append(String.format("Tax(%.0f%%): %.2f\n", taxPct, tax));
-        out.append(String.format("Discount: -%.2f\n", discount));
-        out.append(String.format("TOTAL: %.2f\n", total));
 
-        String printable = InvoiceFormatter.identityFormat(out.toString());
-        System.out.print(printable);
+        ReceiptGenerator receiptGen = new ReceiptGenerator();
+        String receipt = receiptGen.buildReceipt(invId, lines, menu, subtotal, taxPct, tax, discount, total);
+        store.save(invId, receipt);
 
+        String printable = InvoiceFormatter.identityFormat(receipt);
+        System.out.println(printable);
         store.save(invId, printable);
         System.out.println("Saved invoice: " + invId + " (lines=" + store.countLines(invId) + ")");
+
     }
 }
