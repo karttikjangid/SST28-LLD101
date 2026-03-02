@@ -26,11 +26,9 @@ public class TryIt {
         System.out.println("After escalate (new object): " + escalated);
         System.out.println("Original still unchanged  : " + original);
 
-        // These lines should not compile after immutability refactor:
         // original.setPriority("CRITICAL");
         // original.setAssigneeEmail("x@y.com");
 
-        // External mutation should not affect ticket tags
         List<String> tags = escalated.getTags();
         try {
             tags.add("HACKED_FROM_OUTSIDE");
